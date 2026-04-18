@@ -278,6 +278,7 @@ const styles: Record<string, React.CSSProperties> = {
     maxWidth: 420,
     width: '100%',
     color: '#0A0F0D',
+    overflow: 'hidden',
   },
   header: {
     textAlign: 'center' as const,
@@ -383,6 +384,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: 4,
+    minWidth: 0,
   },
   label: {
     fontSize: 12,
@@ -399,6 +401,8 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'border-color 0.2s',
     color: '#0A0F0D',
     background: '#F7FAF8',
+    width: '100%',
+    minWidth: 0,
   },
   error: {
     background: '#FEF2F2',
