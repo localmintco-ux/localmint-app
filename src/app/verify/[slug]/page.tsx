@@ -49,13 +49,27 @@ export default function VerifyPage({ params }: { params: Promise<{ slug: string 
     load();
   }, [params]);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim() || !restaurant) return;
+  // Live search as user types (debounced)
+  useEffect(() => {
+    if (!searchQuery.trim() || !restaurant) {
+      setResults([]);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, restaurant]);
+
+  const performSearch = async (value: string) => {
+    if (!value.trim() || !restaurant) return;
     setSearching(true);
     setSelectedMember(null);
     setBillTotal('');
 
-    const query = searchQuery.trim().toLowerCase();
+    const query = value.trim().toLowerCase();
     const isPhone = /[\d\(\)\-\+\s]{7,}/.test(query);
     const parts = query.split(' ');
 
@@ -66,16 +80,13 @@ export default function VerifyPage({ params }: { params: Promise<{ slug: string 
       .eq('status', 'active');
 
     if (isPhone) {
-      // Search by phone — strip non-digits for matching
       const digits = query.replace(/\D/g, '');
       dbQuery = dbQuery.ilike('phone', `%${digits.slice(-10)}%`);
     } else if (parts.length >= 2) {
-      // Search by first and last name
       dbQuery = dbQuery
         .ilike('first_name', `%${parts[0]}%`)
         .ilike('last_name', `%${parts.slice(1).join(' ')}%`);
     } else {
-      // Search by first or last name
       dbQuery = dbQuery.or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%`);
     }
 
@@ -88,10 +99,6 @@ export default function VerifyPage({ params }: { params: Promise<{ slug: string 
       setResults(data || []);
     }
     setSearching(false);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSearch();
   };
 
   const discountedTotal = billTotal
@@ -139,16 +146,9 @@ export default function VerifyPage({ params }: { params: Promise<{ slug: string 
             placeholder="Name or phone number..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
             autoFocus
           />
-          <button
-            style={styles.searchBtn}
-            onClick={handleSearch}
-            disabled={searching}
-          >
-            {searching ? '...' : 'Look Up'}
-          </button>
+          {searching && <div style={styles.searchSpinner}>...</div>}
         </div>
 
         {/* Results */}
@@ -297,8 +297,10 @@ const styles: Record<string, React.CSSProperties> = {
   },
   searchBox: {
     display: 'flex',
+    alignItems: 'center',
     gap: 8,
     marginBottom: 20,
+    position: 'relative' as const,
   },
   searchInput: {
     flex: 1,
@@ -311,17 +313,10 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#0A0F0D',
     background: '#F7FAF8',
   },
-  searchBtn: {
-    padding: '14px 20px',
-    background: '#1B6B4A',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 12,
+  searchSpinner: {
     fontSize: 14,
+    color: '#1B6B4A',
     fontWeight: 700,
-    fontFamily: "'Outfit', sans-serif",
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
   },
   resultsList: {
     display: 'flex',
