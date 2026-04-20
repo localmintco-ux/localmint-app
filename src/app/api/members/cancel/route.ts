@@ -3,35 +3,40 @@ import { supabase } from '@/lib/supabase';
 import { verifyToken } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
-  // Verify auth
-  const token = req.cookies.get('auth_token')?.value;
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const auth = verifyToken(token);
-  if (!auth) {
-    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-  }
-
   const { memberId } = await req.json();
 
   if (!memberId) {
     return NextResponse.json({ error: 'Member ID required' }, { status: 400 });
   }
 
-  // Verify member belongs to this restaurant
+  // Check for auth token (dashboard users) — optional for verify tool
+  const token = req.cookies.get('auth_token')?.value;
+  let authRestaurantId: string | null = null;
+
+  if (token) {
+    const auth = verifyToken(token);
+    if (auth) {
+      authRestaurantId = auth.restaurantId;
+    }
+  }
+
+  // Get the member
   const { data: member } = await supabase
     .from('members')
-    .select('id, restaurant_id')
+    .select('id, restaurant_id, stripe_subscription_id')
     .eq('id', memberId)
     .single();
 
-  if (!member || member.restaurant_id !== auth.restaurantId) {
+  if (!member) {
     return NextResponse.json({ error: 'Member not found' }, { status: 404 });
   }
 
-  // Cancel membership
+  // If authed, verify member belongs to their restaurant
+  if (authRestaurantId && member.restaurant_id !== authRestaurantId) {
+    return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+  }
+
+  // Cancel membership using service role or direct update
   const { error } = await supabase
     .from('members')
     .update({
@@ -41,10 +46,23 @@ export async function POST(req: NextRequest) {
     .eq('id', memberId);
 
   if (error) {
+    console.error('Cancel error:', error);
     return NextResponse.json({ error: 'Failed to cancel' }, { status: 500 });
   }
 
-  // In production, also cancel Stripe subscription here
+  // Cancel Stripe subscription if exists
+  if (member.stripe_subscription_id) {
+    try {
+      const Stripe = (await import('stripe')).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: '2026-03-25.dahlia',
+      });
+      await stripe.subscriptions.cancel(member.stripe_subscription_id);
+    } catch (err) {
+      console.error('Stripe cancel error:', err);
+      // Don't fail the request if Stripe cancel fails
+    }
+  }
 
   return NextResponse.json({ success: true });
 }
