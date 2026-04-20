@@ -116,17 +116,22 @@ export default function VerifyPage({ params }: { params: Promise<{ slug: string 
     if (!confirm(`Cancel membership for ${member.first_name} ${member.last_name}? They will lose their ${restaurant!.discount_percent}% discount.`)) return;
     setCancellingId(member.id);
 
-    const { error } = await supabase
-      .from('members')
-      .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
-      .eq('id', member.id);
+    try {
+      const res = await fetch('/api/members/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: member.id }),
+      });
 
-    if (error) {
+      if (res.ok) {
+        setCancelSuccess(`${member.first_name} ${member.last_name}'s membership has been cancelled.`);
+        setCancelResults(prev => prev.filter(m => m.id !== member.id));
+        setTimeout(() => setCancelSuccess(''), 4000);
+      } else {
+        alert('Failed to cancel. Please try again.');
+      }
+    } catch {
       alert('Failed to cancel. Please try again.');
-    } else {
-      setCancelSuccess(`${member.first_name} ${member.last_name}'s membership has been cancelled.`);
-      setCancelResults(prev => prev.filter(m => m.id !== member.id));
-      setTimeout(() => setCancelSuccess(''), 4000);
     }
     setCancellingId(null);
   };
