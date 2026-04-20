@@ -80,12 +80,11 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Create the subscription
+    // Create the subscription with immediate payment
     const subscription = await stripe.subscriptions.create({
       customer: customer.id,
       items: [{ price: price.id }],
-      payment_behavior: 'default_incomplete',
-      expand: ['latest_invoice.payment_intent'],
+      default_payment_method: paymentMethodId,
       metadata: {
         restaurant_id: restaurantId,
         first_name: firstName,
@@ -94,19 +93,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const invoice = subscription.latest_invoice as unknown as { payment_intent: Stripe.PaymentIntent };
-    const paymentIntent = invoice.payment_intent;
-
-    // If payment requires action (3D Secure etc)
-    if (paymentIntent.status === 'requires_action') {
-      return NextResponse.json({
-        status: 'requires_action',
-        clientSecret: paymentIntent.client_secret,
-      });
-    }
-
-    // Payment succeeded — create member in our database
-    if (paymentIntent.status === 'succeeded') {
+    // If subscription is active, payment succeeded
+    if (subscription.status === 'active' || subscription.status === 'trialing') {
       await supabase.from('members').upsert({
         restaurant_id: restaurantId,
         first_name: firstName,
@@ -123,7 +111,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ status: 'success' });
     }
 
-    return NextResponse.json({ status: 'processing' });
+    // If incomplete, payment needs confirmation
+    if (subscription.status === 'incomplete') {
+      const latestInvoice = await stripe.invoices.retrieve(
+        subscription.latest_invoice as string,
+        { expand: ['payment_intent'] }
+      );
+      const invoiceData = latestInvoice as unknown as { payment_intent: Stripe.PaymentIntent };
+      const pi = invoiceData.payment_intent;
+      
+      if (pi && pi.client_secret) {
+        return NextResponse.json({
+          status: 'requires_action',
+          clientSecret: pi.client_secret,
+        });
+      }
+    }
+
+    return NextResponse.json({ error: 'Payment failed. Please try again.' }, { status: 400 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to create subscription';
     console.error('Stripe error:', err);
