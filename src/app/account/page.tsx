@@ -56,20 +56,22 @@ export default function AccountPage() {
 
     setCancellingId(membershipId);
 
-    const { error } = await supabase
-      .from('members')
-      .update({
-        status: 'cancelled',
-        cancelled_at: new Date().toISOString(),
-      })
-      .eq('id', membershipId);
+    try {
+      const res = await fetch('/api/members/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId: membershipId }),
+      });
 
-    if (error) {
+      if (res.ok) {
+        setMemberships(prev => prev.map(m =>
+          m.id === membershipId ? { ...m, status: 'cancelled' } : m
+        ));
+      } else {
+        alert('Failed to cancel. Please try again or contact the restaurant.');
+      }
+    } catch {
       alert('Failed to cancel. Please try again or contact the restaurant.');
-    } else {
-      setMemberships(prev => prev.map(m =>
-        m.id === membershipId ? { ...m, status: 'cancelled' } : m
-      ));
     }
     setCancellingId(null);
   };
