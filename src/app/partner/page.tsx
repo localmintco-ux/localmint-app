@@ -211,17 +211,19 @@ function PartnerForm() {
 
 export default function PartnerPage() {
   return (
-    <div style={s.page}>
+    <div style={{ background: '#0A0F0D', minHeight: '100vh' }}>
+      <div style={s.page}>
       <div style={s.logo}><span style={{ color: '#34D399' }}>Local</span>Mint</div>
       <Elements stripe={stripePromise}>
         <PartnerForm />
       </Elements>
     </div>
+    </div>
   );
 }
 
 const s: Record<string, React.CSSProperties> = {
-  page: { maxWidth: 1100, margin: '0 auto', padding: '48px 32px 60px', fontFamily: "'Outfit', sans-serif", background: '#0A0F0D', color: '#F7FAF8', minHeight: '100vh' },
+  page: { maxWidth: 1100, margin: '0 auto', padding: '48px 32px 60px', fontFamily: "'Outfit', sans-serif", color: '#F7FAF8', minHeight: '100vh' },
   logo: { fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', marginBottom: 48 },
   heroRow: { marginBottom: 48 },
   heroBadge: { display: 'inline-block', padding: '5px 14px', borderRadius: 100, background: 'rgba(46,139,87,.12)', border: '1px solid rgba(46,139,87,.25)', fontSize: 11, fontWeight: 600, color: '#34D399', letterSpacing: '.06em', textTransform: 'uppercase' as const, marginBottom: 16 },
