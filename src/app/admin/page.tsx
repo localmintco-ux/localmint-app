@@ -16,6 +16,8 @@ interface Restaurant {
   active_members: number;
   total_members: number;
   mrr: number;
+  signup_views: number;
+  verify_views: number;
 }
 
 export default function AdminPage() {
@@ -249,8 +251,16 @@ export default function AdminPage() {
                     <div style={s.rStatLabel}>MRR</div>
                   </div>
                   <div style={s.rStat}>
-                    <div style={s.rStatValue}>{formatDate(r.created_at)}</div>
-                    <div style={s.rStatLabel}>Added</div>
+                    <div style={s.rStatValue}>{r.signup_views || 0}</div>
+                    <div style={s.rStatLabel}>Signup Views</div>
+                  </div>
+                  <div style={s.rStat}>
+                    <div style={s.rStatValue}>{r.signup_views > 0 ? ((r.active_members / r.signup_views) * 100).toFixed(1) + '%' : '0%'}</div>
+                    <div style={s.rStatLabel}>Conversion</div>
+                  </div>
+                  <div style={s.rStat}>
+                    <div style={s.rStatValue}>{r.verify_views || 0}</div>
+                    <div style={s.rStatLabel}>Verifications</div>
                   </div>
                 </div>
                 <div style={s.rLinks}>
@@ -310,7 +320,7 @@ const s: Record<string, React.CSSProperties> = {
   rName: { fontSize: 18, fontWeight: 700, color: '#0A0F0D' },
   rSlug: { fontSize: 12, color: '#1B6B4A', fontFamily: "'JetBrains Mono', monospace" },
   rBadge: { fontSize: 11, fontWeight: 600, color: '#1B6B4A', background: '#E8F5EE', padding: '4px 10px', borderRadius: 6 },
-  rStats: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, borderTop: '1px solid #F3F5F4', borderBottom: '1px solid #F3F5F4' },
+  rStats: { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 0, borderTop: '1px solid #F3F5F4', borderBottom: '1px solid #F3F5F4' },
   rStat: { padding: '14px 20px', textAlign: 'center' as const, borderRight: '1px solid #F3F5F4' },
   rStatValue: { fontSize: 18, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace", color: '#0A0F0D', marginBottom: 2 },
   rStatLabel: { fontSize: 10, color: '#9CA3AF' },
