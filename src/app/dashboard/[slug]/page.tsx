@@ -10,6 +10,17 @@ interface Restaurant {
   slug: string;
   subscription_price: number;
   discount_percent: number;
+  onboarding_step: number;
+  pos_system: string | null;
+  cuisine_type: string | null;
+  hours: string | null;
+  website: string | null;
+  address: string | null;
+  phone: string | null;
+  menu_url: string | null;
+  sales_data_url: string | null;
+  offer_approved: boolean;
+  materials_approved: boolean;
 }
 
 interface Member {
@@ -32,6 +43,7 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'cancelled'>('all');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState({ signupViews: 0, signupViewsMonth: 0, verifyViews: 0 });
 
   useEffect(() => {
@@ -177,6 +189,165 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
             <button style={st.logoutBtn} onClick={handleLogout}>Log Out</button>
           </div>
         </div>
+
+        {/* Onboarding Checklist */}
+        {restaurant!.onboarding_step < 5 && (
+          <div style={st.onboardingWrap}>
+            <div style={st.onboardingHeader}>
+              <div>
+                <div style={st.onboardingTitle}>Complete Setup to Launch</div>
+                <div style={st.onboardingSub}>{restaurant!.onboarding_step} of 5 steps complete</div>
+              </div>
+              <div style={st.onboardingProgress}>
+                <div style={{ ...st.onboardingBar, width: `${(restaurant!.onboarding_step / 5) * 100}%` }}></div>
+              </div>
+            </div>
+            <div style={st.onboardingSteps}>
+              {/* Step 1: Restaurant Details */}
+              <div style={restaurant!.onboarding_step >= 1 ? st.stepDone : st.stepActive}>
+                <div style={restaurant!.onboarding_step >= 1 ? st.stepNumDone : st.stepNum}>{restaurant!.onboarding_step >= 1 ? '✓' : '1'}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={st.stepTitle}>Restaurant Details</div>
+                  <div style={st.stepDesc}>Confirm your address, phone, hours, cuisine type, and POS system</div>
+                  {restaurant!.onboarding_step < 1 && (
+                    <button style={st.stepBtn} onClick={() => setShowOnboarding('details')}>Complete</button>
+                  )}
+                </div>
+              </div>
+              {/* Step 2: Upload Menu */}
+              <div style={restaurant!.onboarding_step >= 2 ? st.stepDone : restaurant!.onboarding_step === 1 ? st.stepActive : st.stepLocked}>
+                <div style={restaurant!.onboarding_step >= 2 ? st.stepNumDone : st.stepNum}>{restaurant!.onboarding_step >= 2 ? '✓' : '2'}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={st.stepTitle}>Upload Current Menu</div>
+                  <div style={st.stepDesc}>Upload your menu as a PDF or photos so we can design your VIP version</div>
+                  {restaurant!.onboarding_step === 1 && (
+                    <button style={st.stepBtn} onClick={() => setShowOnboarding('menu')}>Upload</button>
+                  )}
+                </div>
+              </div>
+              {/* Step 3: Upload Sales Data */}
+              <div style={restaurant!.onboarding_step >= 3 ? st.stepDone : restaurant!.onboarding_step === 2 ? st.stepActive : st.stepLocked}>
+                <div style={restaurant!.onboarding_step >= 3 ? st.stepNumDone : st.stepNum}>{restaurant!.onboarding_step >= 3 ? '✓' : '3'}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={st.stepTitle}>Upload Sales Data</div>
+                  <div style={st.stepDesc}>Export last 6-12 months of transaction data from your POS system</div>
+                  {restaurant!.onboarding_step === 2 && (
+                    <button style={st.stepBtn} onClick={() => setShowOnboarding('sales')}>Upload</button>
+                  )}
+                </div>
+              </div>
+              {/* Step 4: Review Offer */}
+              <div style={restaurant!.onboarding_step >= 4 ? st.stepDone : restaurant!.onboarding_step === 3 ? st.stepActive : st.stepLocked}>
+                <div style={restaurant!.onboarding_step >= 4 ? st.stepNumDone : st.stepNum}>{restaurant!.onboarding_step >= 4 ? '✓' : '4'}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={st.stepTitle}>Review Your VIP Offer</div>
+                  <div style={st.stepDesc}>{restaurant!.onboarding_step === 3 ? 'We\'re analyzing your data and designing your offer. We\'ll notify you when it\'s ready for review.' : 'We\'ll design your custom offer based on your data'}</div>
+                  {restaurant!.offer_approved === false && restaurant!.onboarding_step === 3 && (
+                    <div style={st.stepPending}>Pending — LocalMint is preparing your offer</div>
+                  )}
+                </div>
+              </div>
+              {/* Step 5: Approve Materials */}
+              <div style={restaurant!.onboarding_step >= 5 ? st.stepDone : restaurant!.onboarding_step === 4 ? st.stepActive : st.stepLocked}>
+                <div style={restaurant!.onboarding_step >= 5 ? st.stepNumDone : st.stepNum}>{restaurant!.onboarding_step >= 5 ? '✓' : '5'}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={st.stepTitle}>Approve Print Materials</div>
+                  <div style={st.stepDesc}>{restaurant!.onboarding_step === 4 ? 'Review your VIP menus, table tents, and check presenter cards. Approve to launch.' : 'We\'ll design your print materials after your offer is approved'}</div>
+                  {restaurant!.materials_approved === false && restaurant!.onboarding_step === 4 && (
+                    <div style={st.stepPending}>Pending — LocalMint is designing your materials</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Onboarding Modal: Details */}
+        {showOnboarding === 'details' && (
+          <div style={st.modal}>
+            <div style={st.modalCard}>
+              <h2 style={st.modalTitle}>Restaurant Details</h2>
+              <div style={st.modalForm}>
+                <div style={st.modalField}><label style={st.modalLabel}>Address</label><input style={st.modalInput} placeholder="123 Main St, Long Island, NY" id="ob-address" defaultValue={restaurant!.address || ''} /></div>
+                <div style={st.modalField}><label style={st.modalLabel}>Phone</label><input style={st.modalInput} placeholder="(516) 555-1234" id="ob-phone" defaultValue={restaurant!.phone || ''} /></div>
+                <div style={st.modalField}><label style={st.modalLabel}>Website or Instagram</label><input style={st.modalInput} placeholder="www.mariosbistro.com" id="ob-website" defaultValue={restaurant!.website || ''} /></div>
+                <div style={st.modalField}><label style={st.modalLabel}>Hours of Operation</label><input style={st.modalInput} placeholder="Mon-Thu 11-10, Fri-Sat 11-11, Sun 12-9" id="ob-hours" defaultValue={restaurant!.hours || ''} /></div>
+                <div style={st.modalField}><label style={st.modalLabel}>Cuisine Type</label><input style={st.modalInput} placeholder="Italian, Seafood, American, etc." id="ob-cuisine" defaultValue={restaurant!.cuisine_type || ''} /></div>
+                <div style={st.modalField}>
+                  <label style={st.modalLabel}>POS System</label>
+                  <select style={st.modalInput} id="ob-pos" defaultValue={restaurant!.pos_system || ''}>
+                    <option value="">Select your POS</option>
+                    <option value="toast">Toast</option>
+                    <option value="square">Square</option>
+                    <option value="clover">Clover</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div style={st.modalActions}>
+                  <button style={st.modalCancel} onClick={() => setShowOnboarding(null)}>Cancel</button>
+                  <button style={st.modalSubmit} onClick={async () => {
+                    const res = await fetch('/api/onboarding', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restaurantId: restaurant!.id, action: 'save_details', data: { address: (document.getElementById('ob-address') as HTMLInputElement).value, phone: (document.getElementById('ob-phone') as HTMLInputElement).value, website: (document.getElementById('ob-website') as HTMLInputElement).value, hours: (document.getElementById('ob-hours') as HTMLInputElement).value, cuisineType: (document.getElementById('ob-cuisine') as HTMLInputElement).value, posSystem: (document.getElementById('ob-pos') as HTMLSelectElement).value }})});
+                    if (res.ok) { setRestaurant({ ...restaurant!, onboarding_step: 1, address: (document.getElementById('ob-address') as HTMLInputElement).value, phone: (document.getElementById('ob-phone') as HTMLInputElement).value }); setShowOnboarding(null); }
+                  }}>Save & Continue</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Onboarding Modal: Menu Upload */}
+        {showOnboarding === 'menu' && (
+          <div style={st.modal}>
+            <div style={st.modalCard}>
+              <h2 style={st.modalTitle}>Upload Your Current Menu</h2>
+              <p style={st.modalDesc}>Upload your menu as a PDF or photos. We&apos;ll use this to design your VIP version with dual pricing and QR codes.</p>
+              <div style={st.modalField}>
+                <label style={st.modalLabel}>Menu File (PDF, JPG, PNG)</label>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" id="ob-menu-file" style={st.modalInput} />
+              </div>
+              <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 8 }}>Or paste a link to your menu if it&apos;s online:</p>
+              <div style={st.modalField}>
+                <input style={st.modalInput} placeholder="https://www.yourrestaurant.com/menu" id="ob-menu-url" />
+              </div>
+              <div style={st.modalActions}>
+                <button style={st.modalCancel} onClick={() => setShowOnboarding(null)}>Cancel</button>
+                <button style={st.modalSubmit} onClick={async () => {
+                  const urlInput = (document.getElementById('ob-menu-url') as HTMLInputElement).value;
+                  const fileInput = document.getElementById('ob-menu-file') as HTMLInputElement;
+                  const menuUrl = urlInput || (fileInput.files?.[0]?.name ? `uploaded: ${fileInput.files[0].name}` : '');
+                  if (!menuUrl) { alert('Please upload a file or provide a URL'); return; }
+                  const res = await fetch('/api/onboarding', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restaurantId: restaurant!.id, action: 'save_menu_url', data: { url: menuUrl }})});
+                  if (res.ok) { setRestaurant({ ...restaurant!, onboarding_step: 2, menu_url: menuUrl }); setShowOnboarding(null); }
+                }}>Submit & Continue</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Onboarding Modal: Sales Data Upload */}
+        {showOnboarding === 'sales' && (
+          <div style={st.modal}>
+            <div style={st.modalCard}>
+              <h2 style={st.modalTitle}>Upload Sales Data</h2>
+              <p style={st.modalDesc}>Export your last 6-12 months of transaction data from your POS system. This helps us analyze your average order value, visit frequency, and customer patterns to design the optimal VIP offer.</p>
+              <div style={st.modalField}>
+                <label style={st.modalLabel}>Sales Data File (CSV, XLSX, PDF)</label>
+                <input type="file" accept=".csv,.xlsx,.xls,.pdf" id="ob-sales-file" style={st.modalInput} />
+              </div>
+              <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 8 }}>Not sure how to export? We can walk you through it on a quick call.</p>
+              <div style={st.modalActions}>
+                <button style={st.modalCancel} onClick={() => setShowOnboarding(null)}>Cancel</button>
+                <button style={st.modalSubmit} onClick={async () => {
+                  const fileInput = document.getElementById('ob-sales-file') as HTMLInputElement;
+                  const fileName = fileInput.files?.[0]?.name || '';
+                  if (!fileName) { alert('Please upload your sales data file'); return; }
+                  const res = await fetch('/api/onboarding', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restaurantId: restaurant!.id, action: 'save_sales_url', data: { url: `uploaded: ${fileName}` }})});
+                  if (res.ok) { setRestaurant({ ...restaurant!, onboarding_step: 3, sales_data_url: `uploaded: ${fileName}` }); setShowOnboarding(null); }
+                }}>Submit & Continue</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div style={st.statsGrid}>
@@ -400,4 +571,31 @@ const st: Record<string, React.CSSProperties> = {
   filterBtn: { padding: '8px 14px', fontSize: 12, fontWeight: 600, color: '#6B7F73', background: '#fff', border: '1.5px solid #E2E8E5', borderRadius: 8, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" },
   filterActive: { padding: '8px 14px', fontSize: 12, fontWeight: 600, color: '#1B6B4A', background: '#E8F5EE', border: '1.5px solid #1B6B4A', borderRadius: 8, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" },
   footer: { textAlign: 'center' as const, padding: '32px 0', fontSize: 12, color: '#9CA3AF' },
+  onboardingWrap: { background: '#fff', borderRadius: 14, border: '2px solid #1B6B4A', padding: '24px', marginBottom: 32 },
+  onboardingHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, gap: 16, flexWrap: 'wrap' as const },
+  onboardingTitle: { fontSize: 18, fontWeight: 800, color: '#0A0F0D' },
+  onboardingSub: { fontSize: 13, color: '#6B7F73' },
+  onboardingProgress: { width: 200, height: 6, background: '#E8EDE9', borderRadius: 3, overflow: 'hidden' },
+  onboardingBar: { height: '100%', background: '#1B6B4A', borderRadius: 3, transition: 'width 0.3s' },
+  onboardingSteps: { display: 'flex', flexDirection: 'column' as const, gap: 8 },
+  stepActive: { display: 'flex', gap: 14, padding: '16px', background: '#F7FAF8', border: '1.5px solid #1B6B4A', borderRadius: 10, alignItems: 'flex-start' },
+  stepDone: { display: 'flex', gap: 14, padding: '16px', background: '#E8F5EE', border: '1.5px solid #E8F5EE', borderRadius: 10, alignItems: 'flex-start', opacity: 0.7 },
+  stepLocked: { display: 'flex', gap: 14, padding: '16px', background: '#F7FAF8', border: '1.5px solid #E8EDE9', borderRadius: 10, alignItems: 'flex-start', opacity: 0.5 },
+  stepNum: { width: 28, height: 28, borderRadius: '50%', background: '#E8EDE9', color: '#6B7F73', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  stepNumDone: { width: 28, height: 28, borderRadius: '50%', background: '#1B6B4A', color: '#fff', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  stepTitle: { fontSize: 14, fontWeight: 700, color: '#0A0F0D', marginBottom: 2 },
+  stepDesc: { fontSize: 12, color: '#6B7F73', lineHeight: 1.5 },
+  stepBtn: { marginTop: 8, padding: '6px 16px', fontSize: 12, fontWeight: 600, color: '#fff', background: '#1B6B4A', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" },
+  stepPending: { marginTop: 8, fontSize: 11, color: '#92400E', background: '#FFF9E6', padding: '6px 12px', borderRadius: 6, fontWeight: 600 },
+  modal: { position: 'fixed' as const, top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, zIndex: 1000 },
+  modalCard: { background: '#fff', borderRadius: 16, padding: '32px 28px', maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' as const, color: '#0A0F0D' },
+  modalTitle: { fontSize: 20, fontWeight: 800, margin: '0 0 8px' },
+  modalDesc: { fontSize: 13, color: '#6B7F73', lineHeight: 1.6, marginBottom: 20 },
+  modalForm: { display: 'flex', flexDirection: 'column' as const, gap: 14 },
+  modalField: { display: 'flex', flexDirection: 'column' as const, gap: 4 },
+  modalLabel: { fontSize: 12, fontWeight: 600, color: '#4A5E52' },
+  modalInput: { padding: '10px 12px', border: '1.5px solid #E2E8E5', borderRadius: 8, fontSize: 14, fontFamily: "'Outfit', sans-serif", outline: 'none', color: '#0A0F0D', background: '#F7FAF8', width: '100%' },
+  modalActions: { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 },
+  modalCancel: { padding: '10px 20px', fontSize: 13, fontWeight: 600, color: '#6B7F73', background: '#F7FAF8', border: '1px solid #E2E8E5', borderRadius: 8, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" },
+  modalSubmit: { padding: '10px 24px', fontSize: 13, fontWeight: 700, color: '#fff', background: '#1B6B4A', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" },
 };
