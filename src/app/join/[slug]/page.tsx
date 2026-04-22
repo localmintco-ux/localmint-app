@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { supabase } from '@/lib/supabase';
+import { trackPageView } from '@/lib/tracking';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -223,7 +224,7 @@ export default function JoinPage({ params }: { params: Promise<{ slug: string }>
         .single();
 
       if (error || !data) { setNotFound(true); }
-      else { setRestaurant(data); }
+      else { setRestaurant(data); trackPageView('signup', data.id); }
       setLoading(false);
     }
     load();
