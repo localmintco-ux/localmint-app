@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { trackPageView } from '@/lib/tracking';
 
 interface Restaurant {
   id: string;
@@ -55,6 +56,7 @@ export default function VerifyPage({ params }: { params: Promise<{ slug: string 
         setNotFound(true);
       } else {
         setRestaurant(data);
+        trackPageView('verify', data.id);
       }
       setLoading(false);
     }
