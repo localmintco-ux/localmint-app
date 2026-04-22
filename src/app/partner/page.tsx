@@ -1,24 +1,31 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 function PartnerForm() {
+  const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
   const [step, setStep] = useState<'form' | 'processing' | 'success'>('form');
-  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', restaurantName: '' });
+  const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', restaurantName: '', password: '' });
   const [error, setError] = useState('');
+  const [slug, setSlug] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.restaurantName) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.restaurantName || !formData.password) {
       setError('Please fill in all fields.');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters.');
       return;
     }
     if (!stripe || !elements) {
@@ -72,6 +79,7 @@ function PartnerForm() {
         }
       }
 
+      if (data.slug) setSlug(data.slug);
       setStep('success');
     } catch {
       setError('Something went wrong. Please try again.');
@@ -84,9 +92,9 @@ function PartnerForm() {
       <div style={s.successPage}>
         <div style={s.successIcon}>&#10003;</div>
         <h1 style={s.successTitle}>Welcome to LocalMint</h1>
-        <p style={s.successSub}>You&apos;re officially a partner. Complete the onboarding form below so we can start designing your custom VIP offer and print materials.</p>
-        <a href="https://typeform.com/your-onboarding-form" style={s.successBtn}>Start Onboarding</a>
-        <div style={s.successFooter}>We&apos;ll be in touch within 24 hours to kick things off.</div>
+        <p style={s.successSub}>Your restaurant is set up and your dashboard is ready. Complete the onboarding steps to launch your VIP membership program.</p>
+        <button onClick={() => router.push(`/dashboard/${slug}`)} style={{ ...s.successBtn, border: 'none', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}>Go to Your Dashboard</button>
+        <div style={s.successFooter}>We&apos;ll also be in touch within 24 hours to help you get started.</div>
       </div>
     );
   }
@@ -169,6 +177,11 @@ function PartnerForm() {
                 <label style={s.formLabel}>Restaurant Name</label>
                 <input type="text" style={s.formInput} placeholder="Mario's Bistro" value={formData.restaurantName}
                   onChange={(e) => setFormData({ ...formData, restaurantName: e.target.value })} required />
+              </div>
+              <div style={s.formGroup}>
+                <label style={s.formLabel}>Create Password</label>
+                <input type="password" style={s.formInput} placeholder="Min 6 characters" value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })} required minLength={6} />
               </div>
               <div style={s.formGroup}>
                 <label style={s.formLabel}>Card Information</label>
