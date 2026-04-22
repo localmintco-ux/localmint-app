@@ -32,6 +32,7 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'cancelled'>('all');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState({ signupViews: 0, signupViewsMonth: 0, verifyViews: 0 });
 
   useEffect(() => {
     async function load() {
@@ -57,6 +58,36 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
         .order('created_at', { ascending: false });
 
       setMembers(mems || []);
+
+      // Load analytics
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+      const { count: totalSignupViews } = await supabase
+        .from('page_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('restaurant_id', rest.id)
+        .eq('page_type', 'signup');
+
+      const { count: monthSignupViews } = await supabase
+        .from('page_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('restaurant_id', rest.id)
+        .eq('page_type', 'signup')
+        .gte('created_at', monthStart);
+
+      const { count: totalVerifyViews } = await supabase
+        .from('page_views')
+        .select('*', { count: 'exact', head: true })
+        .eq('restaurant_id', rest.id)
+        .eq('page_type', 'verify');
+
+      setAnalytics({
+        signupViews: totalSignupViews || 0,
+        signupViewsMonth: monthSignupViews || 0,
+        verifyViews: totalVerifyViews || 0,
+      });
+
       setLoading(false);
     }
     load();
@@ -170,6 +201,27 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
               {members.length > 0 ? ((cancelledMembers.length / members.length) * 100).toFixed(1) : '0'}%
             </div>
             <div style={st.statSub}>{cancelledMembers.length} cancelled total</div>
+          </div>
+        </div>
+
+        {/* Analytics */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
+          <div style={st.statCard}>
+            <div style={st.statLabel}>Signup Page Views</div>
+            <div style={st.statValue}>{analytics.signupViews}</div>
+            <div style={st.statSub}>{analytics.signupViewsMonth} this month</div>
+          </div>
+          <div style={st.statCard}>
+            <div style={st.statLabel}>Conversion Rate</div>
+            <div style={{ ...st.statValue, color: '#1B6B4A' }}>
+              {analytics.signupViews > 0 ? ((members.filter(m => m.status === 'active').length / analytics.signupViews) * 100).toFixed(1) : '0'}%
+            </div>
+            <div style={st.statSub}>views → active members</div>
+          </div>
+          <div style={st.statCard}>
+            <div style={st.statLabel}>Verification Lookups</div>
+            <div style={st.statValue}>{analytics.verifyViews}</div>
+            <div style={st.statSub}>staff tool usage</div>
           </div>
         </div>
 
