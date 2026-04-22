@@ -24,13 +24,21 @@ export async function GET(req: NextRequest) {
     .from('members')
     .select('restaurant_id, status');
 
+  // Get page view counts per restaurant
+  const { data: views } = await supabase
+    .from('page_views')
+    .select('restaurant_id, page_type');
+
   const enriched = (restaurants || []).map(r => {
     const rMembers = (members || []).filter(m => m.restaurant_id === r.id);
+    const rViews = (views || []).filter(v => v.restaurant_id === r.id);
     return {
       ...r,
       active_members: rMembers.filter(m => m.status === 'active').length,
       total_members: rMembers.length,
       mrr: rMembers.filter(m => m.status === 'active').length * r.subscription_price,
+      signup_views: rViews.filter(v => v.page_type === 'signup').length,
+      verify_views: rViews.filter(v => v.page_type === 'verify').length,
     };
   });
 
