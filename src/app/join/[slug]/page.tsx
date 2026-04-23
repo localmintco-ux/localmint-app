@@ -17,6 +17,9 @@ interface Restaurant {
   subscription_price: number;
   discount_percent: number;
   logo_url: string | null;
+  hook_item: string | null;
+  hook_item_detail: string | null;
+  perks: string[] | null;
 }
 
 function JoinForm({ restaurant }: { restaurant: Restaurant }) {
@@ -135,19 +138,27 @@ function JoinForm({ restaurant }: { restaurant: Restaurant }) {
       </div>
 
       <div style={s.offerBox}>
-        <div style={s.offerDiscount}>{restaurant.discount_percent}% OFF</div>
-        <div style={s.offerDetail}>Every meal. Every visit. Every time.</div>
         <div style={s.offerPrice}>
           <span style={s.priceAmount}>${restaurant.subscription_price}</span>
           <span style={s.pricePeriod}>/month</span>
+        </div>
+        <div style={s.offerDetail}>VIP Membership</div>
+        <div style={s.offerPerks}>
+          {restaurant.hook_item && (
+            <div style={s.offerPerk}><span style={s.perkCheck}>&#10003;</span> {restaurant.hook_item} — free every visit</div>
+          )}
+          <div style={s.offerPerk}><span style={s.perkCheck}>&#10003;</span> {restaurant.discount_percent}% off the entire menu</div>
+          {(restaurant.perks || []).map((perk, i) => (
+            <div key={i} style={s.offerPerk}><span style={s.perkCheck}>&#10003;</span> {perk}</div>
+          ))}
         </div>
         <div style={s.offerCancel}>Cancel anytime — no commitment</div>
       </div>
 
       <div style={s.howItWorks}>
         <div style={s.howStep}><div style={s.howNum}>1</div><div style={s.howText}>Sign up below</div></div>
-        <div style={s.howStep}><div style={s.howNum}>2</div><div style={s.howText}>Tell your server your name</div></div>
-        <div style={s.howStep}><div style={s.howNum}>3</div><div style={s.howText}>Get {restaurant.discount_percent}% off instantly</div></div>
+        <div style={s.howStep}><div style={s.howNum}>2</div><div style={s.howText}>Tell your server you're VIP</div></div>
+        <div style={s.howStep}><div style={s.howNum}>3</div><div style={s.howText}>Enjoy your perks instantly</div></div>
       </div>
 
       <form onSubmit={handleSubmit} style={s.form}>
@@ -258,6 +269,9 @@ const s: Record<string, React.CSSProperties> = {
   offerBox: { background: 'linear-gradient(135deg, #1B6B4A 0%, #15573C 100%)', borderRadius: 14, padding: '24px 20px', textAlign: 'center' as const, color: '#fff', marginBottom: 24 },
   offerDiscount: { fontSize: 36, fontWeight: 900, lineHeight: 1, marginBottom: 4 },
   offerDetail: { fontSize: 13, opacity: .8, marginBottom: 16 },
+  offerPerks: { textAlign: 'left' as const, marginBottom: 16 },
+  offerPerk: { fontSize: 13, padding: '5px 0', display: 'flex', alignItems: 'center', gap: 8 },
+  perkCheck: { color: '#34D399', fontWeight: 700, fontSize: 14 },
   offerPrice: { marginBottom: 6 },
   priceAmount: { fontSize: 32, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace" },
   pricePeriod: { fontSize: 16, opacity: .7 },
