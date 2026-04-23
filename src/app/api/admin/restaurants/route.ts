@@ -90,3 +90,36 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(data);
 }
+
+// PUT - update restaurant settings
+export async function PUT(req: NextRequest) {
+  if (!checkAdmin(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { id, name, description, subscription_price, discount_percent, onboarding_step } = await req.json();
+
+  if (!id) {
+    return NextResponse.json({ error: 'Restaurant ID required' }, { status: 400 });
+  }
+
+  const updateData: Record<string, unknown> = {};
+  if (name !== undefined) updateData.name = name;
+  if (description !== undefined) updateData.description = description;
+  if (subscription_price !== undefined) updateData.subscription_price = subscription_price;
+  if (discount_percent !== undefined) updateData.discount_percent = discount_percent;
+  if (onboarding_step !== undefined) updateData.onboarding_step = onboarding_step;
+
+  const { data, error } = await supabase
+    .from('restaurants')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: 'Failed to update restaurant' }, { status: 500 });
+  }
+
+  return NextResponse.json(data);
+}
