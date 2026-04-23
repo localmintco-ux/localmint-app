@@ -21,6 +21,9 @@ interface Restaurant {
   sales_data_url: string | null;
   offer_approved: boolean;
   materials_approved: boolean;
+  hook_item: string | null;
+  hook_item_detail: string | null;
+  perks: string[] | null;
 }
 
 interface Member {
@@ -406,6 +409,34 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
                 <button style={st.linkBtn} onClick={() => navigator.clipboard.writeText(`https://app.localmint.co/verify/${restaurant!.slug}`)}>Copy Link</button>
               </div>
             </div>
+
+            {/* Current VIP Offer */}
+            {(restaurant!.hook_item || restaurant!.onboarding_step >= 3) && (
+              <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E8EDE9', padding: 20, marginBottom: 32 }}>
+                <div style={st.sectionTitle}>Your VIP Offer</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                  <div style={{ padding: '14px 16px', background: '#F7FAF8', borderRadius: 10, textAlign: 'center' as const }}>
+                    <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: '#1B6B4A' }}>${restaurant!.subscription_price}</div>
+                    <div style={{ fontSize: 11, color: '#6B7F73', marginTop: 2 }}>per month</div>
+                  </div>
+                  <div style={{ padding: '14px 16px', background: '#F7FAF8', borderRadius: 10, textAlign: 'center' as const }}>
+                    <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'JetBrains Mono', monospace", color: '#1B6B4A' }}>{restaurant!.discount_percent}%</div>
+                    <div style={{ fontSize: 11, color: '#6B7F73', marginTop: 2 }}>menu discount</div>
+                  </div>
+                  <div style={{ padding: '14px 16px', background: '#F7FAF8', borderRadius: 10, textAlign: 'center' as const }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#0A0F0D' }}>{restaurant!.hook_item || '—'}</div>
+                    <div style={{ fontSize: 11, color: '#6B7F73', marginTop: 2 }}>complimentary per visit</div>
+                  </div>
+                </div>
+                {(restaurant!.perks && restaurant!.perks.length > 0) && (
+                  <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+                    {restaurant!.perks.map((perk, i) => (
+                      <span key={i} style={{ fontSize: 11, fontWeight: 600, color: '#1B6B4A', background: '#E8F5EE', padding: '4px 10px', borderRadius: 6 }}>{perk}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div style={st.sectionTitle}>Recent Members</div>
             {members.length === 0 ? (
