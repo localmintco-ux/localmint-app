@@ -183,23 +183,25 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
             <h1 style={st.topTitle}>{restaurant!.name}</h1>
           </div>
           <div style={st.topRight}>
-            <div style={st.programBadge}>
-              {restaurant!.discount_percent}% off · ${restaurant!.subscription_price}/mo
-            </div>
+            {restaurant!.onboarding_step >= 3 && (
+              <div style={st.programBadge}>
+                {restaurant!.discount_percent}% off · ${restaurant!.subscription_price}/mo
+              </div>
+            )}
             <button style={st.logoutBtn} onClick={handleLogout}>Log Out</button>
           </div>
         </div>
 
         {/* Onboarding Checklist */}
-        {restaurant!.onboarding_step < 5 && (
+        {restaurant!.onboarding_step < 3 && (
           <div style={st.onboardingWrap}>
             <div style={st.onboardingHeader}>
               <div>
                 <div style={st.onboardingTitle}>Complete Setup to Launch</div>
-                <div style={st.onboardingSub}>{restaurant!.onboarding_step} of 5 steps complete</div>
+                <div style={st.onboardingSub}>{restaurant!.onboarding_step} of 3 steps complete</div>
               </div>
               <div style={st.onboardingProgress}>
-                <div style={{ ...st.onboardingBar, width: `${(restaurant!.onboarding_step / 5) * 100}%` }}></div>
+                <div style={{ ...st.onboardingBar, width: `${(restaurant!.onboarding_step / 3) * 100}%` }}></div>
               </div>
             </div>
             <div style={st.onboardingSteps}>
@@ -236,33 +238,20 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
                   )}
                 </div>
               </div>
-              {/* Step 4: Review Offer */}
-              <div style={restaurant!.onboarding_step >= 4 ? st.stepDone : restaurant!.onboarding_step === 3 ? st.stepActive : st.stepLocked}>
-                <div style={restaurant!.onboarding_step >= 4 ? st.stepNumDone : st.stepNum}>{restaurant!.onboarding_step >= 4 ? '✓' : '4'}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={st.stepTitle}>Review Your VIP Offer</div>
-                  <div style={st.stepDesc}>{restaurant!.onboarding_step === 3 ? 'We\'re analyzing your data and designing your offer. We\'ll notify you when it\'s ready for review.' : 'We\'ll design your custom offer based on your data'}</div>
-                  {restaurant!.offer_approved === false && restaurant!.onboarding_step === 3 && (
-                    <div style={st.stepPending}>Pending — LocalMint is preparing your offer</div>
-                  )}
-                </div>
-              </div>
-              {/* Step 5: Approve Materials */}
-              <div style={restaurant!.onboarding_step >= 5 ? st.stepDone : restaurant!.onboarding_step === 4 ? st.stepActive : st.stepLocked}>
-                <div style={restaurant!.onboarding_step >= 5 ? st.stepNumDone : st.stepNum}>{restaurant!.onboarding_step >= 5 ? '✓' : '5'}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={st.stepTitle}>Approve Print Materials</div>
-                  <div style={st.stepDesc}>{restaurant!.onboarding_step === 4 ? 'Review your VIP menus, table tents, and check presenter cards. Approve to launch.' : 'We\'ll design your print materials after your offer is approved'}</div>
-                  {restaurant!.materials_approved === false && restaurant!.onboarding_step === 4 && (
-                    <div style={st.stepPending}>Pending — LocalMint is designing your materials</div>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         )}
 
-        {/* Onboarding Modal: Details */}
+        {/* Onboarding Complete - Pending Your Work */}
+        {restaurant!.onboarding_step >= 3 && restaurant!.onboarding_step < 5 && (
+          <div style={{ ...st.onboardingWrap, borderColor: '#34D399', background: '#F0FDF9' }}>
+            <div style={{ textAlign: 'center' as const, padding: '16px 0' }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#1B6B4A', color: '#fff', fontSize: 22, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>✓</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#0A0F0D', marginBottom: 4 }}>Setup Complete</div>
+              <div style={{ fontSize: 14, color: '#6B7F73', lineHeight: 1.6 }}>We have everything we need. Our team is analyzing your data and designing your custom VIP program. We'll be in touch shortly with your proposed offer and print materials.</div>
+            </div>
+          </div>
+        )}
         {showOnboarding === 'details' && (
           <div style={st.modal}>
             <div style={st.modalCard}>
