@@ -29,6 +29,8 @@ export default function AdminPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
+  const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
+  const [editData, setEditData] = useState({ subscription_price: 29, discount_percent: 15, name: '', description: '' });
   const [newRestaurant, setNewRestaurant] = useState({
     name: '',
     slug: '',
@@ -222,6 +224,46 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Edit Restaurant Modal */}
+        {editingRestaurant && (
+          <div style={s.modal}>
+            <div style={s.modalCard}>
+              <h2 style={s.modalTitle}>Edit {editingRestaurant.name}</h2>
+              <div style={s.modalForm}>
+                <div style={s.field}>
+                  <label style={s.label}>Restaurant Name</label>
+                  <input style={s.input} value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} />
+                </div>
+                <div style={s.field}>
+                  <label style={s.label}>Description</label>
+                  <input style={s.input} value={editData.description} onChange={(e) => setEditData({ ...editData, description: e.target.value })} />
+                </div>
+                <div style={s.fieldRow}>
+                  <div style={s.field}>
+                    <label style={s.label}>Subscription Price ($/mo)</label>
+                    <input style={s.input} type="number" value={editData.subscription_price} onChange={(e) => setEditData({ ...editData, subscription_price: Number(e.target.value) })} />
+                  </div>
+                  <div style={s.field}>
+                    <label style={s.label}>Member Discount (%)</label>
+                    <input style={s.input} type="number" value={editData.discount_percent} onChange={(e) => setEditData({ ...editData, discount_percent: Number(e.target.value) })} />
+                  </div>
+                </div>
+                <div style={s.modalActions}>
+                  <button type="button" style={s.modalCancel} onClick={() => setEditingRestaurant(null)}>Cancel</button>
+                  <button type="button" style={s.modalSubmit} onClick={async () => {
+                    const res = await fetch('/api/admin/restaurants', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ id: editingRestaurant.id, ...editData }),
+                    });
+                    if (res.ok) { setEditingRestaurant(null); loadRestaurants(); }
+                  }}>Save Changes</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Restaurant List */}
         {loading ? (
           <div style={{ textAlign: 'center' as const, padding: 40, color: '#9CA3AF' }}>Loading...</div>
@@ -267,6 +309,7 @@ export default function AdminPage() {
                   <a href={`/join/${r.slug}`} target="_blank" style={s.rLink}>Signup Page</a>
                   <a href={`/verify/${r.slug}`} target="_blank" style={s.rLink}>Verify Tool</a>
                   <a href={`/dashboard/${r.slug}`} target="_blank" style={s.rLink}>Dashboard</a>
+                  <button style={{ ...s.rLink, border: 'none', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }} onClick={() => { setEditingRestaurant(r); setEditData({ subscription_price: r.subscription_price, discount_percent: r.discount_percent, name: r.name, description: r.description || '' }); }}>Edit Settings</button>
                 </div>
               </div>
             ))}
