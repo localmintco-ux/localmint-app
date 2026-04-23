@@ -30,7 +30,7 @@ export default function AdminPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
-  const [editData, setEditData] = useState({ subscription_price: 29, discount_percent: 15, name: '', description: '' });
+  const [editData, setEditData] = useState({ subscription_price: 29, discount_percent: 15, name: '', description: '', hook_item: '', hook_item_detail: '', perks: '' });
   const [newRestaurant, setNewRestaurant] = useState({
     name: '',
     slug: '',
@@ -244,17 +244,31 @@ export default function AdminPage() {
                     <input style={s.input} type="number" value={editData.subscription_price} onChange={(e) => setEditData({ ...editData, subscription_price: Number(e.target.value) })} />
                   </div>
                   <div style={s.field}>
-                    <label style={s.label}>Member Discount (%)</label>
+                    <label style={s.label}>Menu-Wide Discount (%)</label>
                     <input style={s.input} type="number" value={editData.discount_percent} onChange={(e) => setEditData({ ...editData, discount_percent: Number(e.target.value) })} />
                   </div>
+                </div>
+                <div style={{ ...s.field, marginTop: 8 }}>
+                  <label style={{ ...s.label, color: '#1B6B4A', fontWeight: 700 }}>Hook Item (complimentary per visit)</label>
+                  <input style={s.input} placeholder="e.g. Glass of House Wine" value={editData.hook_item} onChange={(e) => setEditData({ ...editData, hook_item: e.target.value })} />
+                </div>
+                <div style={s.field}>
+                  <label style={s.label}>Hook Item Detail</label>
+                  <input style={s.input} placeholder="e.g. One per visit, house red or white" value={editData.hook_item_detail} onChange={(e) => setEditData({ ...editData, hook_item_detail: e.target.value })} />
+                </div>
+                <div style={s.field}>
+                  <label style={s.label}>Additional Perks (one per line)</label>
+                  <textarea style={{ ...s.input, minHeight: 80, resize: 'vertical' as const }} placeholder={"Unlimited fresh bread\nMember-only weekly specials\nPriority weekend reservations"} value={editData.perks} onChange={(e) => setEditData({ ...editData, perks: e.target.value })} />
+                  <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>Enter each perk on a new line</div>
                 </div>
                 <div style={s.modalActions}>
                   <button type="button" style={s.modalCancel} onClick={() => setEditingRestaurant(null)}>Cancel</button>
                   <button type="button" style={s.modalSubmit} onClick={async () => {
+                    const perksArray = editData.perks.split('\n').map(p => p.trim()).filter(p => p.length > 0);
                     const res = await fetch('/api/admin/restaurants', {
                       method: 'PUT',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ id: editingRestaurant.id, ...editData }),
+                      body: JSON.stringify({ id: editingRestaurant.id, name: editData.name, description: editData.description, subscription_price: editData.subscription_price, discount_percent: editData.discount_percent, hook_item: editData.hook_item, hook_item_detail: editData.hook_item_detail, perks: perksArray }),
                     });
                     if (res.ok) { setEditingRestaurant(null); loadRestaurants(); }
                   }}>Save Changes</button>
@@ -309,7 +323,7 @@ export default function AdminPage() {
                   <a href={`/join/${r.slug}`} target="_blank" style={s.rLink}>Signup Page</a>
                   <a href={`/verify/${r.slug}`} target="_blank" style={s.rLink}>Verify Tool</a>
                   <a href={`/dashboard/${r.slug}`} target="_blank" style={s.rLink}>Dashboard</a>
-                  <button style={{ ...s.rLink, border: 'none', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }} onClick={() => { setEditingRestaurant(r); setEditData({ subscription_price: r.subscription_price, discount_percent: r.discount_percent, name: r.name, description: r.description || '' }); }}>Edit Settings</button>
+                  <button style={{ ...s.rLink, border: 'none', cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }} onClick={() => { setEditingRestaurant(r); setEditData({ subscription_price: r.subscription_price, discount_percent: r.discount_percent, name: r.name, description: r.description || '', hook_item: (r as unknown as Record<string, string>).hook_item || '', hook_item_detail: (r as unknown as Record<string, string>).hook_item_detail || '', perks: JSON.stringify((r as unknown as Record<string, unknown>).perks || [], null, 2) }); }}>Edit Settings</button>
                 </div>
               </div>
             ))}
