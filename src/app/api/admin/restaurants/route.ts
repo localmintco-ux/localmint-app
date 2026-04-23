@@ -97,7 +97,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { id, name, description, subscription_price, discount_percent, onboarding_step } = await req.json();
+  const { id, name, description, subscription_price, discount_percent, onboarding_step, hook_item, hook_item_detail, perks } = await req.json();
 
   if (!id) {
     return NextResponse.json({ error: 'Restaurant ID required' }, { status: 400 });
@@ -109,6 +109,9 @@ export async function PUT(req: NextRequest) {
   if (subscription_price !== undefined) updateData.subscription_price = subscription_price;
   if (discount_percent !== undefined) updateData.discount_percent = discount_percent;
   if (onboarding_step !== undefined) updateData.onboarding_step = onboarding_step;
+  if (hook_item !== undefined) updateData.hook_item = hook_item;
+  if (hook_item_detail !== undefined) updateData.hook_item_detail = hook_item_detail;
+  if (perks !== undefined) updateData.perks = perks;
 
   const { data, error } = await supabase
     .from('restaurants')
