@@ -42,7 +42,7 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'members'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'members' | 'staff'>('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'cancelled'>('all');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -392,6 +392,7 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
         <div style={st.tabs}>
           <button style={activeTab === 'overview' ? st.tabActive : st.tab} onClick={() => setActiveTab('overview')}>Overview</button>
           <button style={activeTab === 'members' ? st.tabActive : st.tab} onClick={() => setActiveTab('members')}>Members ({members.length})</button>
+          <button style={activeTab === 'staff' ? st.tabActive : st.tab} onClick={() => setActiveTab('staff')}>Staff Guide</button>
         </div>
 
         {/* Overview */}
@@ -546,6 +547,107 @@ export default function DashboardPage({ params }: { params: Promise<{ slug: stri
           </div>
         )}
 
+        {/* Staff Guide Tab */}
+        {activeTab === 'staff' && (
+          <div>
+            <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #E8EDE9', padding: '32px 28px', marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <div>
+                  <h2 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px' }}>VIP Member Staff Guide</h2>
+                  <p style={{ fontSize: 13, color: '#6B7F73', margin: 0 }}>{restaurant!.name} — share this with your team</p>
+                </div>
+              </div>
+
+              {/* Step 1: Greeting */}
+              <div style={st.guideSection}>
+                <div style={st.guideStepNum}>1</div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={st.guideStepTitle}>When the Guest Sits Down</h3>
+                  <div style={st.guideCard}>
+                    <p style={st.guideText}>After greeting the table, ask:</p>
+                    <div style={st.guideScript}>&ldquo;Are you a VIP member with us?&rdquo;</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 14 }}>
+                      <div style={st.guideOption}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#1B6B4A', marginBottom: 4 }}>If YES:</div>
+                        <p style={{ fontSize: 12, color: '#4A5E52', lineHeight: 1.5, margin: 0 }}>Pull up the verification tool on your phone or tablet. Search their name to confirm membership. Then bring their complimentary item.</p>
+                      </div>
+                      <div style={st.guideOption}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#6B7F73', marginBottom: 4 }}>If NO:</div>
+                        <p style={{ fontSize: 12, color: '#4A5E52', lineHeight: 1.5, margin: 0 }}>No action needed. The menu, table tent, and check presenter card will do the selling. If they ask about VIP, say &ldquo;You can scan the QR code on the menu or table to sign up instantly.&rdquo;</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2: Verification */}
+              <div style={st.guideSection}>
+                <div style={st.guideStepNum}>2</div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={st.guideStepTitle}>Verify the Member</h3>
+                  <div style={st.guideCard}>
+                    <p style={st.guideText}>Open the verification tool in your browser:</p>
+                    <div style={{ background: '#E8F5EE', padding: '10px 14px', borderRadius: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#1B6B4A', fontWeight: 600, marginBottom: 10 }}>app.localmint.co/verify/{restaurant!.slug}</div>
+                    <p style={st.guideText}>Type the guest&apos;s name. You&apos;ll see:</p>
+                    <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 6, marginTop: 8 }}>
+                      {restaurant!.hook_item && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#FFF9E6', borderRadius: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#92400E' }}>Complimentary:</span>
+                          <span style={{ fontSize: 12, color: '#92400E' }}>{restaurant!.hook_item}</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#E8F5EE', borderRadius: 6 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#1B6B4A' }}>Discount:</span>
+                        <span style={{ fontSize: 12, color: '#1B6B4A' }}>{restaurant!.discount_percent}% off entire check</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3: Deliver Hook Item */}
+              {restaurant!.hook_item && (
+                <div style={st.guideSection}>
+                  <div style={st.guideStepNum}>3</div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={st.guideStepTitle}>Deliver the Complimentary Item</h3>
+                    <div style={st.guideCard}>
+                      <p style={st.guideText}>Once verified, bring the guest their complimentary item:</p>
+                      <div style={{ background: '#FFF9E6', border: '1px solid #F59E0B', borderRadius: 10, padding: '14px 16px', textAlign: 'center' as const, margin: '10px 0' }}>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: '#0A0F0D' }}>{restaurant!.hook_item}</div>
+                        {restaurant!.hook_item_detail && <div style={{ fontSize: 12, color: '#92400E', marginTop: 4 }}>{restaurant!.hook_item_detail}</div>}
+                      </div>
+                      <p style={st.guideText}>Ring it into the POS as usual, then comp the item (100% discount on that line item).</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: At Checkout */}
+              <div style={st.guideSection}>
+                <div style={st.guideStepNum}>{restaurant!.hook_item ? '4' : '3'}</div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={st.guideStepTitle}>At Checkout</h3>
+                  <div style={st.guideCard}>
+                    <p style={st.guideText}>Before closing the tab, apply the VIP member discount:</p>
+                    <div style={{ background: '#E8F5EE', border: '1px solid #1B6B4A', borderRadius: 10, padding: '14px 16px', textAlign: 'center' as const, margin: '10px 0' }}>
+                      <div style={{ fontSize: 28, fontWeight: 800, color: '#1B6B4A' }}>{restaurant!.discount_percent}% OFF</div>
+                      <div style={{ fontSize: 12, color: '#1B6B4A' }}>Apply to food and beverage total</div>
+                    </div>
+                    <p style={st.guideText}>The verification tool also has a bill calculator — enter the total and it shows you the exact discounted amount to charge.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* If Guest Asks About VIP */}
+              <div style={{ marginTop: 16, padding: '20px', background: '#F7FAF8', borderRadius: 12, border: '1px solid #E8EDE9' }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#0A0F0D', marginBottom: 10 }}>If a guest asks about VIP membership:</div>
+                <div style={st.guideScript}>&ldquo;You can scan the QR code on the menu or table to sign up. It takes about a minute and you get {restaurant!.hook_item ? `a free ${restaurant!.hook_item.toLowerCase()} every visit plus ` : ''}{restaurant!.discount_percent}% off every meal.&rdquo;</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={st.footer}>
           Powered by <span style={{ color: '#34D399', fontWeight: 700 }}>LocalMint</span>
         </div>
@@ -618,4 +720,11 @@ const st: Record<string, React.CSSProperties> = {
   modalActions: { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 },
   modalCancel: { padding: '10px 20px', fontSize: 13, fontWeight: 600, color: '#6B7F73', background: '#F7FAF8', border: '1px solid #E2E8E5', borderRadius: 8, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" },
   modalSubmit: { padding: '10px 24px', fontSize: 13, fontWeight: 700, color: '#fff', background: '#1B6B4A', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" },
+  guideSection: { display: 'flex', gap: 16, marginBottom: 24, alignItems: 'flex-start' },
+  guideStepNum: { width: 32, height: 32, borderRadius: '50%', background: '#1B6B4A', color: '#fff', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 },
+  guideStepTitle: { fontSize: 16, fontWeight: 700, color: '#0A0F0D', margin: '0 0 10px' },
+  guideCard: { background: '#F7FAF8', borderRadius: 10, padding: '16px 18px', border: '1px solid #E8EDE9' },
+  guideText: { fontSize: 13, color: '#4A5E52', lineHeight: 1.6, margin: '0 0 6px' },
+  guideScript: { fontSize: 15, fontWeight: 600, fontStyle: 'italic' as const, color: '#0A0F0D', padding: '12px 16px', background: '#fff', borderLeft: '3px solid #1B6B4A', borderRadius: '0 8px 8px 0', lineHeight: 1.5 },
+  guideOption: { padding: '12px 14px', background: '#fff', borderRadius: 8, border: '1px solid #E8EDE9' },
 };
